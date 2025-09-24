@@ -1,8 +1,7 @@
 # docker-compose.yml
-version: '3.8'
-
+name: tgsm-bot
 services:
-  telegram-message-bot:
+  app:
     build: .
     env_file: 
       - .env
@@ -13,9 +12,14 @@ services:
       - ./:/app  
       - ${STORAGE_PATH:-./db}:/db 
     networks:
-      - app-network
-    restart: unless-stopped
+      host-bridge:
+        ipv4_address: 172.30.0.10  # Фиксированный IP
+    # restart: unless-stopped
 
 networks:
-  app-network:
+  host-bridge:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
