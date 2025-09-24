@@ -1,0 +1,21 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  telegram-message-bot:
+    build: .
+    env_file: 
+      - .env
+    environment:
+      - SERVER_ADDR=0.0.0.0
+      - SERVER_PORT=${SERVER_PORT:-80}
+    volumes:
+      - ./:/app  
+      - ${STORAGE_PATH:-./db}:/db 
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

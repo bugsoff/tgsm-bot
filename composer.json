@@ -1,0 +1,19 @@
+{
+    "require": {
+        "telegram-bot/api": "^2.5",
+        "react/http": "^1.10",
+        "react/socket": "^1.15",
+        "ext-pdo": "*",
+        "ext-pdo_sqlite": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
+}
