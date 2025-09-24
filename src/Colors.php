@@ -34,11 +34,3 @@ class Colors
     public const BG_WHITE    = "\033[47m";    # White
 
 }
-
-function cprintf($color, $format, ...$args)
-{
-    echo 
-        defined(Colors::$color) ?: Colors::RESET,
-        sprintf(date("c") . $format . PHP_EOL, $args),
-        Colors::RESET;  
-}

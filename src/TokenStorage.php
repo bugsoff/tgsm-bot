@@ -19,7 +19,7 @@ class TokenStorage {
             throw new RuntimeException("Database dir '$dbPath' is not exists!");
         }
         $this->dbPath = $dbPath;
-        $this->pdo = new PDO('sqlite:' . $this->dbPath);
+        $this->pdo = new PDO('sqlite:' . $this->dbPath . "/tokens.db");
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->initTable();
     }
@@ -31,7 +31,7 @@ class TokenStorage {
                 token CHAR(32) PRIMARY KEY,  
                 chat_id INTEGER NOT NULL UNIQUE,
                 created_at INTEGER NOT NULL,
-                deleted_at INTEGER DEFAULT NULL,
+                deleted_at INTEGER DEFAULT NULL
             )");     
         $this->pdo->exec("CREATE INDEX IF NOT EXISTS idx_created_at ON tokens(created_at)");
     }

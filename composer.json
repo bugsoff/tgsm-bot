@@ -9,7 +9,10 @@
     "autoload": {
         "psr-4": {
             "App\\": "src/"
-        }
+        },
+        "files": [
+            "src/functions.php"
+        ] 
     },
     "config": {
         "optimize-autoloader": true,
