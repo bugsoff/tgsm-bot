@@ -29,12 +29,11 @@ class TelegramHandler
             $this->botApi = new BotApi($this->botToken);
             $webhookInfo = $this->botApi->getWebhookInfo();
             $currentUrl = $webhookInfo->getUrl();
-            $currentSecret = $webhookInfo->getSecretToken();
     
-            if ($currentUrl !== $this->webhookUrl || $currentSecret !== $this->secretToken) {
+            if ($currentUrl !== $this->webhookUrl) {
                 $this->botApi->setWebhook($this->webhookUrl, null, null, null, false, $this->secretToken);
             } else {
-                cprintf(Colors::CYAN, "[%s] Webhook already properly configured", __METHOD__);
+                cprintf(Colors::CYAN, "[%s] Webhook %s already properly configured", __METHOD__, $currentUrl);
             }
         } catch (Exception $e) {
             error_log("[" . __METHOD__ . "] Failed to configure webhook: [{$e->getCode()}] {$e->getMessage()}\n");
