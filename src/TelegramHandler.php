@@ -3,13 +3,14 @@
 
 namespace App;
 
-use Colors;
+use App\Colors;
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\Message;
 use TelegramBot\Api\HttpException;
 use TelegramBot\Api\InvalidJsonException;
 use TelegramBot\Api\Exception;
 use Exception as CommonException;
+use RuntimeException;
 
 class TelegramHandler 
 {    
@@ -23,9 +24,9 @@ class TelegramHandler
         protected string $botName,
         private TokenStorage $storage
     ) {
-        cprintf(null, "[%s] Set webhook: %s", __METHOD__, $wenhookUrl);
+        cprintf(null, "[%s] Set webhook: %s", __METHOD__, $webhookUrl);
         try {
-            $this->botApi = BotApi($this->botToken);
+            $this->botApi = new BotApi($this->botToken);
             $webhookInfo = $this->botApi->getWebhookInfo();
             $currentUrl = $webhookInfo->getUrl();
             $currentSecret = $webhookInfo->getSecretToken();
@@ -74,7 +75,7 @@ class TelegramHandler
         return null;
     }
 
-    private function sendMessage(int|stdClass $chat, string $message, string $type = null): bool
+    private function sendMessage(int|stdClass $chat, string $message, ?string $type = null): bool
     {
         $chatId = is_int($chat) ? $chat : $chat->chatId;
         cprintf(null, "[%s] Send message: %s", __METHOD__, $message); 
