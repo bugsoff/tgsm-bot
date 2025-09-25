@@ -2,8 +2,9 @@
 
 namespace App;
 
-use Colors;
+use App\Colors;
 use PDO;
+use PDOException;
 use stdClass;
 
 class TokenStorage {
@@ -38,7 +39,7 @@ class TokenStorage {
 
     public function newToken(int $chatId): string {
         cprintf(null, "[%s] Generate token", __METHOD__);
-        $maxCharecterNum = strlenstrlen(self::TOKEN_CHARACTERS) - 1;
+        $maxCharecterNum = strlen(self::TOKEN_CHARACTERS) - 1;
         do {
             $token = '';
             for ($i = 0; $i < self::TOKEN_LENGTH; $i++) {
@@ -58,12 +59,13 @@ class TokenStorage {
                 ->prepare("INSERT INTO tokens (token, chat_id, created_at) VALUES (?, ?, ?)")
                 ->execute([$token, $chatId, time()]);    
         } catch (PDOException $e) {
+            cprintf(Colors::YELLOW, "Code: %d Exception: %s", $e->getCode(), $e->getMessage());
             if ($e->getCode() == 23000) { // SQLITE_CONSTRAINT
                 cprintf(Colors::YELLOW, "[%s] Chat exists! Try to load token", __METHOD__);
                 return $this->getToken($chatId)->token;
             }
             throw $e;
-        }
+        } 
 
         return $token;
     }
@@ -78,7 +80,7 @@ class TokenStorage {
                 token, 
                 chat_id, 
                 datetime(created_at, 'unixepoch') as created_at, 
-                datetime(deteled_at, 'unixepoch') as deleted_at 
+                datetime(deleted_at, 'unixepoch') as deleted_at 
             FROM tokens WHERE $idField = ? LIMIT 1
         ");
         $this->$stmt->execute([$id]);
