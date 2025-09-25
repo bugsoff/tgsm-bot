@@ -101,7 +101,7 @@ class Server
             return $this->response("Too long message. Up to 1 Kbyte.", 414);
         }
         if ($result = $this->telegramHandler->sendTo($token, $text)) {
-            return $this->response("Message sent: $text");
+            return $this->response($text);
         }
         if ($result === false) {
             return $this->response("Send temporary failed", 503);

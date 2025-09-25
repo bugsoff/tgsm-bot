@@ -80,11 +80,11 @@ class TelegramHandler
         $chatId = is_int($chat) ? $chat : $chat->chatId;
         cprintf(null, "[%s] Send message to Telegram", __METHOD__); 
         try {
-            if (($result =  $this->botApi->sendMessage($chatId, $message, $type)) instanceof Message) {
-                cprintf(Colors::GREEN, "[%s] Message %s (#%d) sent to chat #%d", $message, $result->getMessageId(), $result->getChat()->getId());
+            if (($result = $this->botApi->sendMessage($chatId, $message, $type)) instanceof Message) {
+                cprintf(Colors::GREEN, "[%s] Message #%d sent to chat #%d successfully", __METHOD__, $result->getMessageId(), $result->getChat()->getId());
                 return true;
             } else {
-                $errMessage = sprintf("[%s] Unexpected responce from Telegram API: %s", __METHOD__, json_encode($message));
+                $errMessage = sprintf("[%s] Unexpected responce from Telegram API: %s", __METHOD__, json_encode($result));
             }
         } catch (HttpException $e) {
             $httpCode = $e->getCode();
