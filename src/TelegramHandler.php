@@ -11,6 +11,7 @@ use TelegramBot\Api\InvalidJsonException;
 use TelegramBot\Api\Exception;
 use Exception as CommonException;
 use RuntimeException;
+use stdClass;
 
 class TelegramHandler 
 {    
@@ -156,5 +157,5 @@ class TelegramHandler
 
     public function getBotName(): string { return $this->botName; }
 
-    public function validateWebhookRequest($request): bool { return $request->getHeaderLine('X-Telegram-Bot-Api-Secret-Token') === $this->telegramSecretToken; }
+    public function validateWebhookRequest($request): bool { return $request->getHeaderLine('X-Telegram-Bot-Api-Secret-Token') === $this->secretToken; }
 }

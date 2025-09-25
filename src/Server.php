@@ -7,11 +7,14 @@ use React\EventLoop\Loop;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
-use React\Http\Message\Request;
+use Psr\Http\Message\ResponseInterface;
+// use React\Http\Message\Request;
+use React\Http\Message\ServerRequest;
 use React\Socket\SocketServer;
 use App\TokenStorage;
 use App\TelegramHandler;
 use App\Colors;
+use stdClass;
 
 class Server
 {
@@ -42,13 +45,13 @@ class Server
         return new Response($code, ['Content-Type' => 'application/json'], json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ]));
     }
 
-    public function process(Request $request): Response
+    public function process(ServerRequest $request): ResponseInterface
     {
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
         switch($path) {
-            case '/': return $this->response("Telegram Send Message Bot is running. Write to @{$this->telegramHandler->botName} to use it!");
-            case '/webhook': return $this->responseWebhook($request);
+            case '/': return $this->response("Telegram Send Message Bot is running. Write to @{$this->telegramHandler->getBotName()} to use it!");
+            case '/api/webhook': return $this->responseWebhook($request);
             default:
                 $tokenSymbols = str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS);
                 $tokenLength = TokenStorage::TOKEN_LENGTH;
@@ -56,28 +59,27 @@ class Server
                 if ($token = $matches[1] ?? '') {
                     return $this->responseSendTo($token, urldecode($matches[2] ?? ''));
                 }
-        }
+    }
 
         return $this->response("Not found", 404);
     }
 
-    protected function responseWebhook($request): Response
+    protected function responseWebhook(ServerRequest $request): Response
     {
         cprintf(null, "[%s] API process webhook", __METHOD__);
-
         if ($request->getMethod() === 'GET') {
             return $this->response('Webhook endpoint is ready');
         } 
         if ($request->getMethod() === 'POST') {
             if (!$this->telegramHandler->validateWebhookRequest($request)) {
-                $this->response("Oh, no!", 403);
+                return $this->response("Oh, no!", 403);
             }
 
-            $update = json_decode((string) $request->getBody(), true);
+            $update = json_decode((string) $request->getBody());
             
             if ($update) {
                 $handler = $this->telegramHandler;
-                $loop->futureTick(function() use ($handler, $update) {
+                $this->loop->futureTick(function() use ($handler, $update) {
                     try {
                         $handler->handleWebhook($update);
                     } catch (Exception $e) {
@@ -92,7 +94,7 @@ class Server
         return $this->response("Unknown method", 405);
     }
 
-    protected function responseSendTo($token, $text)
+    protected function responseSendTo(string $token, string $text)
     {
         cprintf(null, "[%s] API process sendTo");
         if (strlen($text) > self::MESSAGE_MAX_LENGTH) {
