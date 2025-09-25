@@ -42,7 +42,7 @@ class Server
     {
         cprintf(Colors::WHITE, "[%s] API response: %s %s", __METHOD__, $code, $message);
         $error = $error === null ? $code >= 400 : $error; 
-        return new Response($code, ['Content-Type' => 'application/json'], json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ]));
+        return new Response($code, ['Content-Type' => 'application/json'], json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ], JSON_UNESCAPED_UNICODE));
     }
 
     public function process(ServerRequest $request): ResponseInterface
