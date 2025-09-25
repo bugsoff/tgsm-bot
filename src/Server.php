@@ -45,12 +45,12 @@ class Server
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
         switch($path) {
-            case '/': return $this->response("Telegram Message Forwarder Bot is running. Write to @{$this->telegramHandler->botName} to use it!");
+            case '/': return $this->response("Telegram Send Message Bot is running. Write to @{$this->telegramHandler->botName} to use it!");
             case '/webhook': return $this->responseWebhook($request);
             default:
                 $tokenSymbols = str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS);
                 $tokenLength = TokenStorage::TOKEN_LENGTH;
-                preg_match("#^/([$symbols]\{$tokenLength\})/([^/]+)$#", $path, $matches);
+                preg_match("#^/api/([$symbols]\{$tokenLength\})/([^/]+)$#", $path, $matches);
                 if ($token = $matches[1] ?? '') {
                     return $this->responseSendTo($token, urldecode($matches[2] ?? ''));
                 }
