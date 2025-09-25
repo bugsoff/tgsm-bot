@@ -63,7 +63,7 @@ class TelegramHandler
      */
     public function handleWebhook(stdClass $data): ?bool 
     {
-        cprintf(Colors::CYAN, "[%s] Get webhook. Text: %s", __METHOD__, $data->message->text ?? 'NULL');
+        cprintf(Colors::PURPLE, "[%s] Got webhook from Telegram. %s", __METHOD__, $data->message->text ?? 'NULL');
         switch ($data->message->text ?? '') {
             case "/start":
                 return $this->handleStart($data->message);
@@ -134,9 +134,9 @@ class TelegramHandler
         cprintf(null, "[%s] Stop bot command", __METHOD__);
         $chat = $this->storage->getToken($message->chat->id);
         $this->storage->deleteToken($chat->token);
-        $message = "API-токен <code>{$chat->token}</code> удалён.\nПока!";
+        $stopMessage = "API-токен <code>{$chat->token}</code> удалён.\nПока!";
         
-        return $this->sendMessage((int) $message->chat->id, $welcomeMessage, 'HTML');
+        return $this->sendMessage((int) $message->chat->id, $stopMessage, 'HTML');
     }
     
     public function sendTo(string $token, string $text): ?bool {

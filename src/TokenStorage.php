@@ -93,8 +93,8 @@ class TokenStorage {
         if ($token) {
             $this
                 ->pdo
-                ->prepare("UPDATE tokens set deleted_at = ? WHERE token = ? LIMIT 1")
-                ->execute([time(), $token])
+                ->prepare("DELETE FROM tokens WHERE token = ? LIMIT 1")
+                ->execute([$token])
             ;
         }
     }
