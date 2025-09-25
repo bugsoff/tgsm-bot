@@ -10,7 +10,8 @@ services:
       - SERVER_PORT=${SERVER_PORT:-80}
     volumes:
       - ./:/app  
-      - ${STORAGE_PATH:-./db}:/db 
+      - ${STORAGE_PATH:-./db}:/db
+      - ${LOG_PATH:-./logs}:/logs 
     networks:
       host-bridge:
         ipv4_address: 172.30.0.10  # Фиксированный IP
