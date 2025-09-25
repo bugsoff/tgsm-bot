@@ -63,7 +63,7 @@ class TelegramHandler
      */
     public function handleWebhook(stdClass $data): ?bool 
     {
-        cprintf(Color::CYAN, "[%s] Get webhook. Text: %s", __METHOD__, $data->message->text ?? 'NULL');
+        cprintf(Colors::CYAN, "[%s] Get webhook. Text: %s", __METHOD__, $data->message->text ?? 'NULL');
         switch ($data->message->text ?? '') {
             case "/start":
                 return $this->handleStart($data->message);
@@ -80,7 +80,7 @@ class TelegramHandler
         $chatId = is_int($chat) ? $chat : $chat->chatId;
         cprintf(null, "[%s] Send message: %s", __METHOD__, $message); 
         try {
-            if ($message =  $this->bot->sendMessage($chatId, $welcomeMessage, $type) instanceof Message) {
+            if ($message =  $this->botApi->sendMessage($chatId, $welcomeMessage, $type) instanceof Message) {
                 cprintf(Colors::GREEN, "Message #{$message->getMessageId()} sent to chat #{$message->getChat()->getId()}");
                 return true;
             } else {
@@ -114,10 +114,10 @@ class TelegramHandler
         return false;
     }
     
-    private function handleStart(array $message): bool {
+    private function handleStart(stdClass $message): bool {
         cprintf(null, "[%s] Start bot command", __METHOD__);
         $username = $message->from->first_name ?? 'User';
-        $token = $this->storage->generateToken($message->chat->id);
+        $token = $this->storage->newToken($message->chat->id);
         
         $welcomeMessage = "👋 Привет, {$username}!\n\n"
             . "Ваш уникальный API-токен: <code>{$token}</code>\n"
@@ -130,7 +130,7 @@ class TelegramHandler
         return $this->sendMessage((int) $message->chat->id, $welcomeMessage, 'HTML');
     }
 
-    private function handleStop(array $message) : bool 
+    private function handleStop(stdClass $message) : bool 
     {
         cprintf(null, "[%s] Stop bot command", __METHOD__);
         $chat = $this->storage->getToken($message->chat->id);
@@ -141,7 +141,7 @@ class TelegramHandler
     }
     
     public function sendTo(string $token, string $text): ?bool {
-        cprintf(Color::WHITE, "[%s] Message from API: %s", __METHOD__, $text);
+        cprintf(Colors::CYAN, "[%s] Message from API: %s", __METHOD__, $text);
         $chat = $this->storage->getToken($token);
         if (empty($chat->token)) {
             error_log(sprintf("[%s] Unknown API-token: '%s'", __METHOD__, $token));
