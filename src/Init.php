@@ -18,11 +18,11 @@ class Init
         if (!$webhookUrl) {
             die("WEBHOOK_URL environment variable is required\n");
         }
-        $endpointUrl = trim(getenv('ENDPOINT_URL'), '/');
+        $endpointUrl = trim(getenv('API_ENDPOINT_URL'), '/');
         if (!$endpointUrl) {
-            die("ENDPOINT_URL environment variable is required\n");
+            die("API_ENDPOINT_URL environment variable is required\n");
         }
-        $botName = getenv('TELEGRAM_BOT_NAME');
+        $botName = trim(getenv('TELEGRAM_BOT_NAME'), "@");
         if (!$botName) {
             die("TELEGRAM_BOT_NAME environment variable is required\n");
         }

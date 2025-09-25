@@ -2,3 +2,4 @@ TODO
 vendor
 db/*
 .env
+*.log
