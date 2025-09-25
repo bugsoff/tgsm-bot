@@ -4,16 +4,17 @@
 namespace App;
 
 use React\EventLoop\Loop;
+use React\EventLoop\StreamSelectLoop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
 use React\Socket\SocketServer;
-use TokenStorage;
-use TelegramHandler;
-use Colors;
+use App\TokenStorage;
+use App\TelegramHandler;
+use App\Colors;
 
 class Server
 {
-    private Loop $loop;
+    private StreamSelectLoop $loop;
     private HttpServer $server;
     public const MESSAGE_MAX_LENGTH = 1024;
 
@@ -33,7 +34,7 @@ class Server
         $this->loop->run();
     }
 
-    protected function response(string $message, int $code = 200, bool $error = null): Response
+    protected function response(string $message, int $code = 200, ?bool $error = null): Response
     {
         cprintf(Colors::WHITE, "[%s] API response: %s %s", __METHOD__, $code, $message);
         $error = $error === null ? $code >= 400 : $error; 
