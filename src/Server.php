@@ -7,6 +7,7 @@ use React\EventLoop\Loop;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
+use React\Http\Message\Request;
 use React\Socket\SocketServer;
 use App\TokenStorage;
 use App\TelegramHandler;
@@ -25,7 +26,7 @@ class Server
         cprintf(null, "[%s] Make server %s", __METHOD__, $serverAddr);
         $this->loop = Loop::get();
         $this->server = new HttpServer([$this, 'process']);
-        $server->listen(new SocketServer($this->serverAddr, [], $this->loop));
+        $this->server->listen(new SocketServer($this->serverAddr, [], $this->loop));
     }
 
     public function run()
@@ -41,7 +42,7 @@ class Server
         return new Response($code, ['Content-Type' => 'application/json'], json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ]));
     }
 
-    protected function process($request): Response
+    public function process(Request $request): Response
     {
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
