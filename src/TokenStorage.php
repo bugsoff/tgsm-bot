@@ -74,11 +74,11 @@ class TokenStorage {
     {
         $idField = is_string($id) ? "token" : "chat_id";
         $stmt = "stmtGetBy_$idField";
-        cprintf(null, "[%s] Load data by %s=%s ...", __METHOD__, $idField, $id);
+        cprintf(null, "[%s] Load data by %s=%s", __METHOD__, $idField, $id);
         $this->$stmt ??= $this->pdo->prepare("
             SELECT 
                 token, 
-                chat_id, 
+                chat_id chatId, 
                 datetime(created_at, 'unixepoch') as created_at, 
                 datetime(deleted_at, 'unixepoch') as deleted_at 
             FROM tokens WHERE $idField = ? LIMIT 1

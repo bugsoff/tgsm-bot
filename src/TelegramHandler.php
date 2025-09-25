@@ -78,10 +78,10 @@ class TelegramHandler
     private function sendMessage(int|stdClass $chat, string $message, ?string $type = null): bool
     {
         $chatId = is_int($chat) ? $chat : $chat->chatId;
-        cprintf(null, "[%s] Send message: %s", __METHOD__, $message); 
+        cprintf(null, "[%s] Send message to Telegram", __METHOD__); 
         try {
-            if ($message =  $this->botApi->sendMessage($chatId, $welcomeMessage, $type) instanceof Message) {
-                cprintf(Colors::GREEN, "Message #{$message->getMessageId()} sent to chat #{$message->getChat()->getId()}");
+            if (($result =  $this->botApi->sendMessage($chatId, $message, $type)) instanceof Message) {
+                cprintf(Colors::GREEN, "[%s] Message %s (#%d) sent to chat #%d", $message, $message->getMessageId(), $message->getChat()->getId());
                 return true;
             } else {
                 $errMessage = sprintf("[%s] Unexpected responce from Telegram API: %s", __METHOD__, json_encode($message));
@@ -109,7 +109,6 @@ class TelegramHandler
             $errMessage = sprintf("[%s] Failed to send message: %s", __METHOD__, $e->getMessage());
         }
 
-        error_log($errMessage);
         cprintf(Colors::RED, $errMessage);
         return false;
     }
@@ -141,14 +140,14 @@ class TelegramHandler
     }
     
     public function sendTo(string $token, string $text): ?bool {
-        cprintf(Colors::CYAN, "[%s] Message from API: %s", __METHOD__, $text);
+        cprintf(Colors::CYAN, "[%s] Got message from API: %s", __METHOD__, $text);
         $chat = $this->storage->getToken($token);
         if (empty($chat->token)) {
-            error_log(sprintf("[%s] Unknown API-token: '%s'", __METHOD__, $token));
+            cprintf(Colors::YELLOW, "[%s] Unknown API-token: '%s'", __METHOD__, $token);
             return null;
         }
         if ($chat->deleted_at ?? false) {
-            error_log(sprintf("[%s] Deleted API-token: '%s'", __METHOD__, $token));
+            cprintf(Colors::YELLOW, "[%s] Deleted API-token: '%s'", __METHOD__, $token);
             return null;
         }
 

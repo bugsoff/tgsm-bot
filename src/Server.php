@@ -50,12 +50,12 @@ class Server
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
         switch($path) {
-            case '/': return $this->response("Telegram Send Message Bot is running. Write to @{$this->telegramHandler->getBotName()} to use it!");
+            case '/': return new Response(200, ['Content-Type' => 'text/plain'], "Telegram Send Message Bot is running. Write to @{$this->telegramHandler->getBotName()} to use it!");
             case '/api/webhook': return $this->responseWebhook($request);
             default:
                 $tokenSymbols = str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS);
                 $tokenLength = TokenStorage::TOKEN_LENGTH;
-                preg_match("#^/api/([$symbols]\{$tokenLength\})/([^/]+)$#", $path, $matches);
+                $result = preg_match(sprintf("#^/api/([%s]{%d})/([^/]+)$#", $tokenSymbols, $tokenLength), $path, $matches);
                 if ($token = $matches[1] ?? '') {
                     return $this->responseSendTo($token, urldecode($matches[2] ?? ''));
                 }
@@ -94,13 +94,13 @@ class Server
         return $this->response("Unknown method", 405);
     }
 
-    protected function responseSendTo(string $token, string $text)
+    protected function responseSendTo(string $token, string $text): Response
     {
-        cprintf(null, "[%s] API process sendTo");
+        cprintf(null, "[%s] API process sendTo", __METHOD__);
         if (strlen($text) > self::MESSAGE_MAX_LENGTH) {
             return $this->response("Too long message. Up to 1 Kbyte.", 414);
         }
-        if ($result = $telegramHandler->sendTo($token, $text)) {
+        if ($result = $this->telegramHandler->sendTo($token, $text)) {
             return $this->response("Message sent: $text");
         }
         if ($result === false) {
