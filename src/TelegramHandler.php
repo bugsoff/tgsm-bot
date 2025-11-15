@@ -140,7 +140,7 @@ class TelegramHandler
     }
     
     public function sendTo(string $token, string $text): ?bool {
-        cprintf(Colors::CYAN, "[%s] Got message from API: %s", __METHOD__, $text);
+        cprintf(null, "[%s] Send message to user", __METHOD__);
         $chat = $this->storage->getToken($token);
         if (empty($chat->token)) {
             cprintf(Colors::YELLOW, "[%s] Unknown API-token: '%s'", __METHOD__, $token);

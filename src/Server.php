@@ -43,7 +43,7 @@ class Server
 
     protected function response(string $message, int $code = 200, ?bool $error = null): Response
     {
-        cprintf(Colors::WHITE, "[%s] API response: %s %s", __METHOD__, $code, $message);
+        cprintf(Colors::WHITE, "[%s] API response: %d", __METHOD__, $code);
         $error = $error === null ? $code >= 400 : $error; 
         return new Response($code, ['Content-Type' => 'application/json'], json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ], JSON_UNESCAPED_UNICODE));
     }
@@ -53,21 +53,21 @@ class Server
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
         switch($path) {
-            case '/': return new Response(200, ['Content-Type' => 'text/plain'], "Telegram Send Message Bot is running. Write to @{$this->telegramHandler->getBotName()} to use it!");
-            case '/api/webhook': return $this->responseWebhook($request);
+            case '/': return new Response(200, ['Content-Type' => 'text/html'], readfile("../pub/index.html"));
+            case '/api/webhook': return $this->processWebhook($request);
             default:
                 $tokenSymbols = str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS);
                 $tokenLength = TokenStorage::TOKEN_LENGTH;
                 $result = preg_match(sprintf("#^/api/([%s]{%d})/([^/]+)$#", $tokenSymbols, $tokenLength), $path, $matches);
                 if ($token = $matches[1] ?? '') {
-                    return $this->responseSendTo($token, urldecode($matches[2] ?? ''));
+                    return $this->processSendTo($token, urldecode($matches[2] ?? ''));
                 }
     }
 
         return $this->response("Not found", 404);
     }
 
-    protected function responseWebhook(ServerRequest $request): Response
+    protected function processWebhook(ServerRequest $request): Response
     {
         cprintf(null, "[%s] API process webhook", __METHOD__);
         if ($request->getMethod() === 'GET') {
@@ -97,14 +97,14 @@ class Server
         return $this->response("Unknown method", 405);
     }
 
-    protected function responseSendTo(string $token, string $text): Response
+    protected function processSendTo(string $token, string $text): Response
     {
-        cprintf(null, "[%s] API process sendTo", __METHOD__);
+        cprintf(Colors::CYAN, "[%s] Got message from API: %s", __METHOD__, $text);
         if (strlen($text) > self::MESSAGE_MAX_LENGTH) {
             return $this->response("Too long message. Up to 1 Kbyte.", 414);
         }
         if ($result = $this->telegramHandler->sendTo($token, $text)) {
-            return $this->response($text);
+            return $this->response("Message sent to $token");
         }
         if ($result === false) {
             return $this->response("Send temporary failed", 503);
