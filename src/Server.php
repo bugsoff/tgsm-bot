@@ -53,7 +53,7 @@ class Server
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
         switch($path) {
-            case '/': return new Response(200, ['Content-Type' => 'text/html'], readfile("../pub/index.html"));
+            case '/': return new Response(200, ['Content-Type' => 'text/html'], implode("", file("pub/index.html")));
             case '/api/webhook': return $this->processWebhook($request);
             default:
                 $tokenSymbols = str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS);
