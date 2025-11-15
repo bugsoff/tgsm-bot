@@ -15,7 +15,7 @@ services:
     networks:
       host-bridge:
         ipv4_address: 172.30.0.10  # Фиксированный IP
-    # restart: unless-stopped
+    restart: unless-stopped
 
 networks:
   host-bridge:

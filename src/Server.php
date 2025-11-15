@@ -29,6 +29,9 @@ class Server
         cprintf(null, "[%s] Make server %s", __METHOD__, $serverAddr);
         $this->loop = Loop::get();
         $this->server = new HttpServer([$this, 'process']);
+        $this->server->on('error', function (Throwable $e) {
+            cprintf(Colors::BG_RED, "[%s] (%d) %s", get_class($e), $e->getCode(), $e->getMessage());
+        });
         $this->server->listen(new SocketServer($this->serverAddr, [], $this->loop));
     }
 
@@ -71,9 +74,9 @@ class Server
             return $this->response('Webhook endpoint is ready');
         } 
         if ($request->getMethod() === 'POST') {
-            if (!$this->telegramHandler->validateWebhookRequest($request)) {
-                return $this->response("Oh, no!", 403);
-            }
+            // if (!$this->telegramHandler->validateWebhookRequest($request)) {
+            //     return $this->response("Oh, no!", 403);
+            // }
 
             $update = json_decode((string) $request->getBody());
             
