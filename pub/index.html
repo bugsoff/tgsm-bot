@@ -158,6 +158,7 @@
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
+            margin: 1rem 0 0 0;
             border-radius: 8px;
             font-size: 1rem;
             cursor: pointer;
@@ -172,8 +173,81 @@
         }
 
         .btn svg {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group input {
+            height: 52px;
+            font-size: 1.1rem;
+            text-align: left;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            padding: 1rem;
+            resize: vertical;
+            font-size: 1.1rem;
+            text-align: left;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(110, 68, 255, 0.2);
+        }
+
+        .char-counter {
+            text-align: right;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .response {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .response.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .response.error {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
         }
 
         .features {
@@ -263,17 +337,41 @@
                 <code>GET https://tgsm.bot.nu/api/{token}/{message}</code>
             </div>
             <p>Где <span class="highlight">token</span> — ваш токен из бота, <span class="highlight">message</span> — текст сообщения (URL-кодированный)</p>
-            
-            <div class="token-display" id="tokenDisplay">
-                https://tgsm.bot.nu/api/<span id="tokenValue"></span>/Hello+World!
-            </div>
-            
-            <button class="btn" onclick="generateExample()">
+       </div>
+
+        <div class="card">
+            <h2>
                 <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 6L12 10.5 8.5 8 12 5.5 15.5 8zM8.5 16L12 13.5 15.5 16 12 18.5 8.5 16z"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                Показать пример с токеном
-            </button>
+                Отправить сообщение
+            </h2>
+
+            <form id="messageForm">
+                <div class="form-group">
+                    <label for="token">Токен (16 символов)</label>
+                    <input type="text" id="token" name="token" required maxlength="16" pattern="[0-9a-zA-Z_\-]{16}" placeholder="Введите 16-символьный токен" >
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Сообщение (до 1024 символов)</label>
+                    <textarea id="message" name="message" maxlength="1024" placeholder="Напишите сообщение, которое будет отправлено в Telegram..."></textarea>
+                    <div class="char-counter">
+                        <span id="currentLength">0</span> / 1024
+                    </div>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn">
+                        <svg viewBox="0 0 24 24" fill="white">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                        Отправить сообщение
+                    </button>
+                </div>
+            </form>
+
+            <div id="response" class="response"></div>
         </div>
 
         <div class="features">
@@ -306,11 +404,63 @@
     </div>
 
     <script>
-        function generateExample() {
-            const token = prompt('Введите ваш токен из бота:');
-            if (token) {
-                document.getElementById('tokenValue').textContent = token;
-                document.getElementById('tokenDisplay').style.display = 'block';
+        const messageInput = document.getElementById('message');
+        const currentLength = document.getElementById('currentLength');
+        const form = document.getElementById('messageForm');
+        const responseDiv = document.getElementById('response');
+
+        // Обновление счётчика символов
+        messageInput.addEventListener('input', () => {
+            const length = messageInput.value.length;
+            currentLength.textContent = length;
+        });
+
+        // Отправка формы
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = document.getElementById('token').value;
+            const message = messageInput.value;
+            
+            // Валидация токена (16 символов)
+            if (token.length !== 16) {
+                showResponse('error', 'Токен должен содержать ровно 16 символов');
+                return;
+            }
+            
+            try {
+                // Формируем URL
+                const encodedMessage = encodeURIComponent(message);
+                const url = `https://tgsm.bot.nu/api/${token}/${encodedMessage}`;
+                
+                // Выполняем GET-запрос
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showResponse('success', data.message || 'Сообщение успешно отправлено');
+                    // Очищаем форму
+                    //form.reset();
+                    //currentLength.textContent = '0';
+                } else {
+                    showResponse('error', data.message || 'Произошла ошибка');
+                }
+            } catch (error) {
+                showResponse('error', 'Ошибка сети или некорректный ответ сервера');
+            }
+        });
+
+        // Функция отображения ответа
+        function showResponse(type, message) {
+            responseDiv.textContent = message;
+            responseDiv.className = `response ${type}`;
+            responseDiv.style.display = 'block';
+            
+            // Автоматически скрыть через 5 секунд, если success
+            if (type === 'success') {
+                setTimeout(() => {
+                    responseDiv.style.display = 'none';
+                }, 5000);
             }
         }
     </script>

@@ -80,7 +80,7 @@ class TelegramHandler
         $chatId = is_int($chat) ? $chat : $chat->chatId;
         cprintf(null, "[%s] Send message to Telegram", __METHOD__); 
         try {
-            if (($result = $this->botApi->sendMessage($chatId, $message, $type)) instanceof Message) {
+            if (($result = $this->botApi->sendMessage($chatId, $message, $type, true)) instanceof Message) {
                 cprintf(Colors::GREEN, "[%s] Message #%d sent to chat #%d successfully", __METHOD__, $result->getMessageId(), $result->getChat()->getId());
                 return true;
             } else {
@@ -119,11 +119,13 @@ class TelegramHandler
         $token = $this->storage->newToken($message->chat->id);
         
         $welcomeMessage = "👋 Привет, {$username}!\n\n"
-            . "Ваш уникальный API-токен: <code>{$token}</code>\n"
+            . "Ваш уникальный API-токен: <code>{$token}</code>\n\n"
             . "URL для отправки сообщений:\n"
             . "<code>{$this->endpointUrl}/{token}/{text}</code>\n\n"
-            . "Пример использования:\n"
-            . "<code>GET {$this->endpointUrl}/{$token}/Hello%20World!</code>\n\n"
+            . "Пример использования в браузере:\n"
+            . "<a href='{$this->endpointUrl}/{$token}/Hello%20World!'>{$this->endpointUrl}/{$token}/Hello%20World!</a>\n\n"
+            . "... или в командной строке:\n"
+            . "<code>curl -s {$this->endpointUrl}/{$token}/Hello%20World!</code>\n\n"
             . "Для удаления токена отправьте команду: <code>/stop</code>";
 
         return $this->sendMessage((int) $message->chat->id, $welcomeMessage, 'HTML');
