@@ -41,41 +41,55 @@ class Server
         $this->loop->run();
     }
 
-    protected function response(string $message, int $code = 200, ?bool $error = null): Response
+    protected function responseJson(string $message, int $code = 200, ?bool $error = null): Response
     {
         cprintf(Colors::WHITE, "[%s] API response: %d", __METHOD__, $code);
         $error = $error === null ? $code >= 400 : $error; 
-        return new Response($code, ['Content-Type' => 'application/json'], json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ], JSON_UNESCAPED_UNICODE));
+        return new Response($code, ['Content-Type' => 'application/json'], 
+                            json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ], JSON_UNESCAPED_UNICODE));
     }
 
     public function process(ServerRequest $request): ResponseInterface
     {
         $path = $request->getUri()->getPath();
         cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
-        switch($path) {
-            case '/': return new Response(200, ['Content-Type' => 'text/html'], implode("", file("pub/index.html")));
-            case '/api/webhook': return $this->processWebhook($request);
-            default:
-                $tokenSymbols = str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS);
-                $tokenLength = TokenStorage::TOKEN_LENGTH;
-                $result = preg_match(sprintf("#^/api/([%s]{%d})/([^/]+)$#", $tokenSymbols, $tokenLength), $path, $matches);
-                if ($token = $matches[1] ?? '') {
-                    return $this->processSendTo($token, urldecode($matches[2] ?? ''));
+        
+        $matches = [];
+        $pathPatterns = [
+            '/^\/$/' => [$this, "processMain"],
+            '/\.(webp|jpg|jpeg|png|gif|json|html)$/i' => [$this, "processStatic"],
+            '/\/api\/webhook/i' => [$this, "processWebhook"],
+            sprintf("#^/api/([%s]{%d})/([^/]+)$#", str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS), TokenStorage::TOKEN_LENGTH) =>
+                function(ServerRequest $request) use ($matches) {
+                    return ($token = $matches[1] ?? '')
+                        ? $this->processSendTo($token, urldecode($matches[2] ?? ''))
+                        : $this->responseJson("Invalid token", 400);
                 }
+        ];
+
+        foreach ($pathPatterns as $pattern => $handler) {
+            if (preg_match($pattern, $path, $matches)) {
+                return $handler($request);
+            }
+        }
+
+        return $this->responseJson("Not found", 404);
     }
 
-        return $this->response("Not found", 404);
+    protected function processMain(ServerRequest $request): Response
+    {
+        return new Response(200, ['Content-Type' => 'text/html'], file_get_contents("pub/index.html"));
     }
 
     protected function processWebhook(ServerRequest $request): Response
     {
         cprintf(null, "[%s] API process webhook", __METHOD__);
         if ($request->getMethod() === 'GET') {
-            return $this->response('Webhook endpoint is ready');
+            return $this->responseJson('Webhook endpoint is ready');
         } 
         if ($request->getMethod() === 'POST') {
             // if (!$this->telegramHandler->validateWebhookRequest($request)) {
-            //     return $this->response("Oh, no!", 403);
+            //     return $this->responseJson("Oh, no!", 403);
             // }
 
             $update = json_decode((string) $request->getBody());
@@ -91,26 +105,48 @@ class Server
                 });
             }
             
-            return $this->response('OK');
+            return $this->responseJson('OK');
         }
 
-        return $this->response("Unknown method", 405);
+        return $this->responseJson("Unknown method", 405);
     }
 
     protected function processSendTo(string $token, string $text): Response
     {
         cprintf(Colors::CYAN, "[%s] Got message from API: %s", __METHOD__, $text);
         if (strlen($text) > self::MESSAGE_MAX_LENGTH) {
-            return $this->response("Too long message. Up to 1 Kbyte.", 414);
+            return $this->responseJson("Too long message. Up to 1 Kbyte.", 414);
         }
         if ($result = $this->telegramHandler->sendTo($token, $text)) {
-            return $this->response("Message sent to $token");
+            return $this->responseJson("Message sent to $token");
         }
         if ($result === false) {
-            return $this->response("Send temporary failed", 503);
+            return $this->responseJson("Send temporary failed", 503);
         }
         
-        return $this->response('Unknown or deleted Token', 401);
+        return $this->responseJson('Unknown or deleted Token', 401);
+    }
+
+    protected function processStatic(ServerRequest $request): Response
+    {
+        $filename = "pub/" . trim($request->getUri()->getPath(), '/');
+        $patterns = [
+            '/\.webp$/i'  => 'image/webp',
+            '/\.jpg$/i'  => 'image/jpeg',
+            '/\.jpeg$/i' => 'image/jpeg',
+            '/\.png$/i'  => 'image/png',
+            '/\.gif$/i'  => 'image/gif',
+            '/\.html$/i' => 'text/html',
+            '/\.json$/i' => 'application/json',
+            null         => 'application/octet-stream',   // значение по умолчанию
+        ];
+
+        foreach ($patterns as $pattern => $contentType) {
+            if (preg_match($pattern, $filename)) {
+                break; // остановка после первого совпадения
+            }
+        }
+        return new Response(200, ['Content-Type' => $contentType], file_get_contents($filename));
     }
 
 }
