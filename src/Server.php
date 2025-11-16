@@ -60,16 +60,16 @@ class Server
             '/\.(webp|jpg|jpeg|png|gif|json|html)$/i' => [$this, "processStatic"],
             '/\/api\/webhook/i' => [$this, "processWebhook"],
             sprintf("#^/api/([%s]{%d})/([^/]+)$#", str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS), TokenStorage::TOKEN_LENGTH) =>
-                function(ServerRequest $request) use ($matches) {
-                    return ($token = $matches[1] ?? '')
-                        ? $this->processSendTo($token, urldecode($matches[2] ?? ''))
+                function(ServerRequest $request, stdClass $data) {
+                    return ($token = $data->matches[1] ?? '')
+                        ? $this->processSendTo($token, urldecode($data->matches[2] ?? ''))
                         : $this->responseJson("Invalid token", 400);
                 }
         ];
 
         foreach ($pathPatterns as $pattern => $handler) {
             if (preg_match($pattern, $path, $matches)) {
-                return $handler($request);
+                return $handler($request, (object)['matches' => $matches]);
             }
         }
 
@@ -118,7 +118,7 @@ class Server
             return $this->responseJson("Too long message. Up to 1 Kbyte.", 414);
         }
         if ($result = $this->telegramHandler->sendTo($token, $text)) {
-            return $this->responseJson("Message sent to $token");
+            return $this->responseJson("The message sent to $token");
         }
         if ($result === false) {
             return $this->responseJson("Send temporary failed", 503);
