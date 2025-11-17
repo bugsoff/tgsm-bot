@@ -1,6 +1,6 @@
 {
     "require": {
-        "telegram-bot/api": "^2.5",
+        "telegram-bot/api": "dev-master",
         "react/http": "^1.10",
         "react/socket": "^1.15",
         "ext-pdo": "*",

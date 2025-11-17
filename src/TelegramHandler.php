@@ -71,7 +71,7 @@ class TelegramHandler
             case "/stop":
                 return $this->handleStop($data->message);
             default:
-                return $this->sendMessage((int) $data->message->chat, "Доступные команды:\n\n"
+                return $this->sendMessage($data->message->chat, "Доступные команды:\n\n"
                 . "<code>/start</code> &emdash; приветсвие и генерация токена для сообщений"
                 . "<code>/stop</code> &emdash; удаление существующего токена для сообщений", 
                 'HTML');
