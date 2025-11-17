@@ -82,7 +82,7 @@ class TelegramHandler
 
     private function sendMessage(int|stdClass $chat, string $message, ?string $type = null): bool
     {
-        $chatId = is_int($chat) ? $chat : $chat->chatId;
+        $chatId = is_int($chat) ? $chat : $chat->id;
         cprintf(null, "[%s] Send message to Telegram", __METHOD__); 
         try {
             if (($result = $this->botApi->sendMessage($chatId, $message, $type, true)) instanceof Message) {
