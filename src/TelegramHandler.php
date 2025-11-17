@@ -43,6 +43,7 @@ class TelegramHandler
     }
 
     /**
+     * Обрабатывает входящие сообщения TG-боту
      *  {
      *      "update_id": 123456789,
      *      "message": {
@@ -70,6 +71,10 @@ class TelegramHandler
             case "/stop":
                 return $this->handleStop($data->message);
             default:
+                return $this->sendMessage((int) $data->message->chat, "Доступные команды:\n\n"
+                . "<code>/start</code> &emdash; приветсвие и генерация токена для сообщений"
+                . "<code>/stop</code> &emdash; удаление существующего токена для сообщений", 
+                'HTML');
         }
 
         return null;
@@ -140,7 +145,7 @@ class TelegramHandler
         
         return $this->sendMessage((int) $message->chat->id, $stopMessage, 'HTML');
     }
-    
+  
     public function sendTo(string $token, string $text): ?bool {
         cprintf(null, "[%s] Send message to user", __METHOD__);
         $chat = $this->storage->getToken($token);

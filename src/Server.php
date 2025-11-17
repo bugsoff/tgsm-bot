@@ -8,7 +8,6 @@ use React\EventLoop\StreamSelectLoop;
 use React\Http\HttpServer;
 use React\Http\Message\Response;
 use Psr\Http\Message\ResponseInterface;
-// use React\Http\Message\Request;
 use React\Http\Message\ServerRequest;
 use React\Socket\SocketServer;
 use App\TokenStorage;
@@ -146,6 +145,7 @@ class Server
                 break; // остановка после первого совпадения
             }
         }
+        
         return new Response(200, ['Content-Type' => $contentType], file_get_contents($filename));
     }
 
