@@ -64,7 +64,7 @@ class TelegramHandler
      */
     public function handleWebhook(stdClass $data): ?bool 
     {
-        cprintf(Colors::PURPLE, "[%s] Got message from Telegram chat (#%d): %s", __METHOD__, $data->message->chat->id, $data->message->text ?? 'NULL');
+        cprintf(Colors::PURPLE, "[%s] Got message from chat (#%d): %s", __METHOD__, $data->message->chat->id, $data->message->text ?? 'NULL');
         switch ($data->message->text ?? '') {
             case "/start":
                 return $this->handleStart($data->message);
@@ -86,7 +86,7 @@ class TelegramHandler
         cprintf(null, "[%s] Send message to Telegram", __METHOD__); 
         try {
             if (($result = $this->botApi->sendMessage($chatId, $message, $type, true)) instanceof Message) {
-                cprintf(Colors::GREEN, "[%s] Message #%d sent to chat #%d successfully", __METHOD__, $result->getMessageId(), $result->getChat()->getId());
+                cprintf(Colors::GREEN, "[%s] Message #%d sent to chat (#%d) successfully", __METHOD__, $result->getMessageId(), $result->getChat()->getId());
                 return true;
             } else {
                 $errMessage = sprintf("[%s] Unexpected responce from Telegram API: %s", __METHOD__, json_encode($result));

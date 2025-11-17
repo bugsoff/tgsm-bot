@@ -57,6 +57,7 @@ class Server
         $pathPatterns = [
             '/^\/$/' => [$this, "processMain"],
             '/\.(webp|jpg|jpeg|png|gif|json|html)$/i' => [$this, "processStatic"],
+            // API
             '/\/api\/webhook/i' => [$this, "processWebhook"],
             sprintf("#^/api/([%s]{%d})/([^/]+)$#", str_replace('-', '\\-', TokenStorage::TOKEN_CHARACTERS), TokenStorage::TOKEN_LENGTH) =>
                 function(ServerRequest $request, stdClass $data) {
@@ -146,7 +147,9 @@ class Server
             }
         }
         
-        return new Response(200, ['Content-Type' => $contentType], file_get_contents($filename));
+        return (file_exists($filename) && is_file($filename) && is_readable($filename))
+            ? Response(200, ['Content-Type' => $contentType], file_get_contents($filename))
+            : Response(404);
     }
 
 }
