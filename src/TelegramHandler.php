@@ -82,15 +82,18 @@ class TelegramHandler
 
     private function sendMessage(int|stdClass $chat, string $message, ?string $type = null): bool
     {
-        $chatId = is_int($chat) ? $chat : $chat->id;
         cprintf(null, "[%s] Send message to Telegram", __METHOD__); 
         try {
-            if (($result = $this->botApi->sendMessage($chatId, $message, $type, true)) instanceof Message) {
-                cprintf(Colors::GREEN, "[%s] Message #%d sent to chat (#%d) successfully", __METHOD__, $result->getMessageId(), $result->getChat()->getId());
-                return true;
-            } else {
-                $errMessage = sprintf("[%s] Unexpected responce from Telegram API: %s", __METHOD__, json_encode($result));
+            // здесь $chat может приходить и от TokenStorage, тогда будет ->chatId, и от телеграма, тогда будет ->id 
+            $chatId = is_int($chat) ? $chat : (int)($chat->chatId ?? $chat->id);
+            if (!$chatId) {
+                throw new RuntimeException(sprintf("Undefined chatId!"));
             }
+            if (!(($result = $this->botApi->sendMessage($chatId, $message, $type, true)) instanceof Message)) {
+                throw new RuntimeException(sprintf("Unexpected responce from Telegram API: %s", json_encode($result)));
+            }
+            cprintf(Colors::GREEN, "[%s] Message #%d sent to chat (#%d) successfully", __METHOD__, $result->getMessageId(), $result->getChat()->getId());
+            return true;
         } catch (HttpException $e) {
             $httpCode = $e->getCode();
             $errMessage = sprintf("[%s] %%s [$httpCode] {$e->getMessage()}", __METHOD__);
@@ -108,11 +111,11 @@ class TelegramHandler
             }
         } catch (InvalidJsonException $e) {
             $errMessage = sprintf("[%s] JSON error: %s", __METHOD__, $e->getMessage());
+        } catch (CommonException|RuntimeException $e) {
+            $errMessage = sprintf("[%s] Failed to send message: %s", __METHOD__, $e->getMessage());
         } catch (Exception $e) {
             $errMessage = sprintf("[%s] Telegram API error: %s", __METHOD__, $e->getMessage());
-        } catch (CommonException $e) {
-            $errMessage = sprintf("[%s] Failed to send message: %s", __METHOD__, $e->getMessage());
-        }
+        } 
 
         cprintf(Colors::RED, $errMessage);
         return false;
