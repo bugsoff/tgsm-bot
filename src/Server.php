@@ -148,8 +148,8 @@ class Server
         }
         
         return (file_exists($filename) && is_file($filename) && is_readable($filename))
-            ? Response(200, ['Content-Type' => $contentType], file_get_contents($filename))
-            : Response(404);
+            ? new Response(200, ['Content-Type' => $contentType], file_get_contents($filename))
+            : new Response(404);
     }
 
 }
