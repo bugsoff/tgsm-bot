@@ -64,7 +64,7 @@ class TelegramHandler
      */
     public function handleWebhook(stdClass $data): ?bool 
     {
-        cprintf(Colors::PURPLE, "[%s] Got webhook from Telegram. %s", __METHOD__, $data->message->text ?? 'NULL');
+        cprintf(Colors::PURPLE, "[%s] Got message from Telegram chat (#%d): %s", __METHOD__, $data->message->chat->id, $data->message->text ?? 'NULL');
         switch ($data->message->text ?? '') {
             case "/start":
                 return $this->handleStart($data->message);
