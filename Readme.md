@@ -1,3 +1,6 @@
+#### [tgsm.bot.nu](https://tgsm.bot.nu)
+#### [@tgsendmsgbot](https://t.me/tgsendmsgbot)
+
 # Установка
 
 ### 1. Загрузить код из репозитория
