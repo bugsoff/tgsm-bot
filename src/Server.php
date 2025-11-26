@@ -44,14 +44,16 @@ class Server
     {
         cprintf(Colors::WHITE, "[%s] API response: %d", __METHOD__, $code);
         $error = $error === null ? $code >= 400 : $error; 
-        return new Response($code, ['Content-Type' => 'application/json'], 
-                            json_encode(['status' => $error ? 'error' : 'success', 'message' => $message ], JSON_UNESCAPED_UNICODE));
+        return new Response($code, 
+                            ['Content-Type' => 'application/json'], 
+                            json_encode(['status' => $error ? 'error' : 'success', 
+                                'message' => $message ], JSON_UNESCAPED_UNICODE) . "\n");
     }
 
     public function process(ServerRequest $request): ResponseInterface
     {
         $path = $request->getUri()->getPath();
-        cprintf(Colors::WHITE, "[%s] API request: %s %s", __METHOD__, $request->getMethod(), $path);
+        cprintf(Colors::WHITE, "[%s] HTTP request: %s %s", __METHOD__, $request->getMethod(), $path);
         
         $matches = [];
         $pathPatterns = [
@@ -118,7 +120,7 @@ class Server
             return $this->responseJson("Too long message. Up to 1 Kbyte.", 414);
         }
         if ($result = $this->telegramHandler->sendTo($token, $text)) {
-            return $this->responseJson("The message sent to $token");
+            return $this->responseJson($text);
         }
         if ($result === false) {
             return $this->responseJson("Send temporary failed", 503);
